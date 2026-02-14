@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>For Rato ❤️</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600&family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --canvas: #0a0a0a;
+            --surface: #161617;
+            --accent: #ff2d55;
+            --text-primary: #ffffff;
+            --text-muted: #8e8e93;
+        }
+
+        * { 
+            box-sizing: border-box; 
+            -webkit-tap-highlight-color: transparent; 
+        }
+
+        body {
+            margin: 0;
+            background: var(--canvas);
+            color: var(--text-primary);
+            font-family: 'Outfit', sans-serif;
+            overflow-x: hidden;
+            overscroll-behavior-y: none;
+            text-align: center;
+        }
+
+        #balloon-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .heart {
+            position: absolute;
+            bottom: -100px;
+            width: 30px;
+            height: 30px;
+            background: var(--accent);
+            transform: rotate(-45deg);
+            opacity: 0.6;
+            animation: float-up linear forwards;
+        }
+
+        .heart::before,
+        .heart::after {
+            content: "";
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: var(--accent);
+            border-radius: 50%;
+        }
+
+        .heart::before { top: -15px; left: 0; }
+        .heart::after { left: 15px; top: 0; }
+
+        @keyframes float-up {
+            0% { opacity: 0; transform: translateY(0) rotate(-45deg); }
+            10% { opacity: 0.6; }
+            100% {
+                transform: translateY(-120vh) rotate(-45deg) translateX(var(--drift));
+                opacity: 0;
+            }
+        }
+
+        .progress-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            z-index: 1000;
+            display: flex;
+            gap: 4px;
+            padding: 10px 10px 0;
+        }
+
+        .progress-bar {
+            flex: 1;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--text-primary);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .story-container {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scrollbar-width: none;
+            position: relative;
+            z-index: 2;
+        }
+
+        .story-container::-webkit-scrollbar { display: none; }
+
+        section {
+            height: 100vh;
+            scroll-snap-align: start;
+            padding: 40px 24px env(safe-area-inset-bottom);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .hero-text {
+            font-family: 'Dancing Script', cursive;
+            font-size: 4rem;
+            margin: 0;
+            background: linear-gradient(180deg, #fff 0%, var(--accent) 150%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: 32px;
+            border: 1px solid rgba(255,255,255,0.05);
+            font-size: 1.15rem;
+            line-height: 1.6;
+            font-weight: 300;
+            max-width: 400px;
+            margin: 0 auto;
+            text-align: justify;
+        }
+
+        .memory-strip {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            width: 100%;
+            max-width: 350px;
+            margin: 0 auto;
+        }
+
+        .img-wrap {
+            aspect-ratio: 1/1;
+            border-radius: 20px;
+            overflow: hidden;
+            background: #222;
+        }
+
+        .img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+
+        .music-card {
+            background: linear-gradient(145deg, #1e1e1e, #121212);
+            padding: 20px;
+            border-radius: 24px;
+            width: 280px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+        }
+
+        .album-art {
+            width: 100%;
+            aspect-ratio: 1/1;
+            background: #282828;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 4rem;
+        }
+
+        .song-info { text-align: left; }
+        .song-title { font-weight: 600; font-size: 1.2rem; margin-bottom: 4px; }
+        .artist-name { color: var(--accent); font-size: 0.9rem; }
+
+        .action-area {
+            position: fixed;
+            bottom: env(safe-area-inset-bottom, 20px);
+            left: 0;
+            width: 100%;
+            padding: 20px;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .action-area.visible { opacity: 1; pointer-events: auto; }
+
+        .btn-ios {
+            background: #fff;
+            color: #000;
+            border: none;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+            border-radius: 18px;
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-ios:active { transform: scale(0.96); }
+
+        #final-msg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--canvas);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .reveal-anim { animation: reveal 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        @keyframes reveal { from { opacity: 0; transform: translateY(30px); } }
+    </style>
+</head>
+<body>
+
+    <div id="balloon-container"></div>
+
+    <div class="progress-container">
+        <div class="progress-bar"><div class="progress-fill" id="p1"></div></div>
+        <div class="progress-bar"><div class="progress-fill" id="p2"></div></div>
+        <div class="progress-bar"><div class="progress-fill" id="p3"></div></div>
+        <div class="progress-bar"><div class="progress-fill" id="p4"></div></div>
+        <div class="progress-bar"><div class="progress-fill" id="p5"></div></div>
+        <div class="progress-bar"><div class="progress-fill" id="p6"></div></div>
+    </div>
+
+    <div class="story-container" id="scroller">
+        <section>
+            <h1 class="hero-text">Hi Rato.</h1>
+            <p style="color: var(--text-muted); margin-top: 20px;">Scroll to begin your message</p>
+        </section>
+
+        <section>
+            <div class="card">
+                <span style="color:red">Happy Valentine's day, </span><strong>rato la pelo yaka</strong>.
+                <br><br>
+                I do not actually know when it happened, but at some point I just started loving you. By the time we were saying silly things like "I love me" or "I like me," I already knew.
+            </div>
+        </section>
+
+        <section>
+            <div class="memory-strip">
+                <div class="img-wrap"><img src="https://drive.proton.me/urls/0Z71CCR78M#21y6Dd6HFguj"></div>
+                <div class="img-wrap"><img src="https://drive.proton.me/urls/CYPDRBNTYW#ruXCztdlpnHu"></div>
+                <div class="img-wrap"><img src="https://drive.proton.me/urls/M01MZEBANC#mIBF1lr2rXIe"></div>
+                <div class="img-wrap"><img src="https://drive.proton.me/urls/F7QPEED1YM#AdGqESjlOIjT"></div>
+            </div>
+            <p style="color: var(--text-muted); margin-top: 20px; width: 100%;">You are the best thing that has happened to me.</p>
+        </section>
+
+        <section>
+            <div class="card">
+                If I were to choose, I would choose you every day of life. I really hope that the universe aligns the stars for us because I really want to do this life thing with you.
+                <br><br>
+                It is difficult at this point in my life to imagine my future without you.
+            </div>
+        </section>
+
+        <section>
+            <div class="card">
+                I hope you hold your end of the rope tightly, because I am definitely holding onto mine. I will not lie; it is scary knowing that someone else has your heart. But I am glad it is yours.
+            </div>
+        </section>
+
+        <section id="last-section">
+            <div class="music-card">
+                <div class="album-art">🎵</div>
+                <div class="song-info">
+                    <div class="song-title">Dream About You</div>
+                    <div class="artist-name">Lloyiso</div>
+                </div>
+            </div>
+            <p style="color: var(--text-muted); margin-top: 30px; font-weight: 300;">I really want to do this life thing with you. Only you.</p>
+        </section>
+    </div>
+
+    <div class="action-area" id="actionArea">
+        <button class="btn-ios" onclick="finish()">
+            <span>Click to reveal</span>
+        </button>
+    </div>
+
+    <div id="final-msg">
+        <h2 class="hero-text" style="font-size: 2.5rem;">I love you, forever and always my baby</h2>
+        <button class="btn-ios" style="margin-top: 40px; width: auto; background: var(--surface); color: white;" onclick="location.reload()">Replay Story</button>
+    </div>
+
+    <script>
+        const scroller = document.getElementById('scroller');
+        const actionArea = document.getElementById('actionArea');
+        const balloonContainer = document.getElementById('balloon-container');
+        const progressFills = [
+            document.getElementById('p1'), 
+            document.getElementById('p2'), 
+            document.getElementById('p3'),
+            document.getElementById('p4'),
+            document.getElementById('p5'),
+            document.getElementById('p6')
+        ];
+
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.className = 'heart';
+            const xPos = Math.random() * 100;
+            const drift = (Math.random() - 0.5) * 200;
+            const duration = 8 + Math.random() * 8;
+            const scale = 0.5 + Math.random() * 0.8;
+
+            heart.style.left = xPos + 'vw';
+            heart.style.transform += ` scale(${scale})`;
+            heart.style.setProperty('--drift', drift + 'px');
+            heart.style.animationDuration = duration + 's';
+            
+            balloonContainer.appendChild(heart);
+            setTimeout(() => heart.remove(), duration * 1000);
+        }
+
+        setInterval(createHeart, 1200);
+
+        scroller.addEventListener('scroll', () => {
+            const scrollPercent = scroller.scrollTop / (scroller.scrollHeight - window.innerHeight);
+            const numStages = progressFills.length;
+            const stage = scrollPercent * numStages;
+            
+            progressFills.forEach((fill, i) => {
+                if (stage > i) {
+                    fill.style.width = Math.min((stage - i) * 100, 100) + '%';
+                } else {
+                    fill.style.width = '0%';
+                }
+            });
+
+            if (scrollPercent > 0.95) {
+                actionArea.classList.add('visible');
+            } else {
+                actionArea.classList.remove('visible');
+            }
+        });
+
+        function finish() {
+            const final = document.getElementById('final-msg');
+            final.style.display = 'flex';
+            final.classList.add('reveal-anim');
+            for(let i=0; i<25; i++) {
+                setTimeout(createHeart, i * 150);
+            }
+        }
+    </script>
+</body>
+</html>
